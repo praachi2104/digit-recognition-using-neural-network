@@ -5,103 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Handwritten Digit Recognition</title>
     <style>
-        /* Styling for canvas and buttons */
-        #canvas {
-            border: 2px solid #87CEEB;
-            background-color: #fff;
-            cursor: crosshair;
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #000;
+            color: #87CEEB;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
-        #clear-btn, #predict-btn {
-            margin-top: 10px;
+        .container {
+            text-align: center;
+            border: 2px solid #87CEEB;
+            padding: 20px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.8);
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        input[type="file"], button {
+            font-size: 1rem;
             padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            margin: 10px;
             cursor: pointer;
+        }
+        input[type="file"] {
+            background-color: #000;
+            color: #87CEEB;
+        }
+        button {
+            background-color: #87CEEB;
+            color: #000;
+        }
+        .result {
+            font-size: 1.5rem;
+            margin-top: 20px;
+        }
+        img {
+            margin-top: 20px;
+            border: 2px solid #87CEEB;
+            border-radius: 10px;
+            max-width: 100%;
         }
     </style>
 </head>
 <body>
-    <div style="text-align: center;">
-        <h1>Draw a Digit</h1>
-        <canvas id="canvas" width="280" height="280"></canvas><br><br>
-        <button id="clear-btn">Clear</button>
-        <button id="predict-btn">Predict</button>
-        
-        <h2>Prediction: <span id="prediction-result">?</span></h2>
-        <div id="image-container">
-            <!-- Image will be displayed here -->
-        </div>
+    <div class="container">
+        <h1>Handwritten Digit Recognition</h1>
+        <form action="/predict" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" required>
+            <button type="submit">Upload Image</button>
+        </form>
+
+        {% if prediction is not none %}
+            <div class="result">
+                <strong>Predicted Digit:</strong> {{ prediction }}
+            </div>
+        {% endif %}
+
+        {% if image_path %}
+            <div class="result">
+                <strong>Uploaded Image:</strong>
+                <img src="{{ image_path }}" alt="Uploaded Image">
+            </div>
+        {% endif %}
     </div>
-
-    <script>
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
-        const predictionResult = document.getElementById("prediction-result");
-        const clearBtn = document.getElementById("clear-btn");
-        const predictBtn = document.getElementById("predict-btn");
-
-        // Variables to track the drawing
-        let drawing = false;
-        let prevX = 0;
-        let prevY = 0;
-
-        // Start drawing
-        canvas.addEventListener("mousedown", (e) => {
-            drawing = true;
-            prevX = e.offsetX;
-            prevY = e.offsetY;
-        });
-
-        // Draw on the canvas
-        canvas.addEventListener("mousemove", (e) => {
-            if (drawing) {
-                ctx.beginPath();
-                ctx.moveTo(prevX, prevY);
-                ctx.lineTo(e.offsetX, e.offsetY);
-                ctx.strokeStyle = "black";
-                ctx.lineWidth = 15;
-                ctx.lineCap = "round";
-                ctx.stroke();
-                prevX = e.offsetX;
-                prevY = e.offsetY;
-            }
-        });
-
-        // Stop drawing
-        canvas.addEventListener("mouseup", () => {
-            drawing = false;
-        });
-
-        // Clear canvas
-        clearBtn.addEventListener("click", () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            predictionResult.textContent = "?";
-            document.getElementById("image-container").innerHTML = "";
-        });
-
-        // Function to capture canvas and send it for prediction
-        predictBtn.addEventListener("click", () => {
-            const imageData = canvas.toDataURL("image/png");
-            console.log("Image Data:", imageData);  // Debugging line to check if image data is captured
-
-            // Send the drawing to the backend for prediction
-            fetch("/predict-drawing", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ image: imageData }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log("Prediction Response:", data);  // Debugging line to check the response from backend
-                predictionResult.textContent = data.prediction;
-                const imgElement = document.createElement("img");
-                imgElement.src = data.imagePath;
-                document.getElementById("image-container").appendChild(imgElement);
-            })
-            .catch(error => {
-                console.error("Error:", error);
-            });
-        });
-    </script>
 </body>
 </html>

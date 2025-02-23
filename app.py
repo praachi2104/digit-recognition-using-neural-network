@@ -1,58 +1,57 @@
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template
 import numpy as np
 import cv2
 from tensorflow.keras.models import load_model
 import os
-import base64
-from io import BytesIO
-from PIL import Image
 
 app = Flask(__name__)
 
-# Load the trained model (update the path if needed)
-model = load_model('model/mnist_cnn_model.h5')
+# Configure the upload folder
+UPLOAD_FOLDER = 'static/uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Load your trained model (update the path if needed)
+model = load_model('model/mnist_model.h5')
+
 
 @app.route('/')
 def home():
     return render_template('index.html')
 
-@app.route('/predict-drawing', methods=['POST'])
-def predict_drawing():
-    try:
-        data = request.get_json()
-        image_data = data['image']
 
-        # Decode the image
-        img_data = base64.b64decode(image_data.split(',')[1])
-        img = Image.open(BytesIO(img_data)).convert('L')
-        img = np.array(img)
+@app.route('/predict', methods=['POST'])
+def predict():
+    if 'file' not in request.files:
+        return "No file found", 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return "No file selected", 400
 
-        # Visualize the original image (for debugging)
-        print("Original Image Shape:", img.shape)  # Should be (height, width), e.g., (280, 280)
+    if file:
+        # Save the uploaded file temporarily
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(file_path)
 
-        # Resize and normalize the image for prediction
-        img = cv2.resize(img, (28, 28))  # Resize to 28x28 pixels (MNIST standard)
-        print("Resized Image Shape:", img.shape)  # Should be (28, 28)
+        # Read and process the saved image
+        img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            return "The uploaded file is not a valid image.", 400
 
-        # Normalize to [0, 1]
-        img = img / 255.0
-        print("Normalized Image:", img.min(), img.max())  # Ensure values are between 0 and 1
-
-        # Reshape for model input (1, 28, 28, 1) because the model expects this shape
+        img = cv2.resize(img, (28, 28)) / 255.0
         img = img.reshape(1, 28, 28, 1)
 
         # Make a prediction
         prediction = model.predict(img)
         label = np.argmax(prediction)
 
-        # Return the prediction
-        return jsonify({
-            'prediction': str(label),
-            'imagePath': image_data
-        })
-    except Exception as e:
-        print("Error during prediction:", e)
-        return jsonify({"error": "An error occurred during prediction."}), 500
+        # Return results with the uploaded image
+        return render_template('index.html', prediction=label, image_path=file_path)
+
+    return "Something went wrong", 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
