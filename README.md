@@ -21,14 +21,14 @@ This project implements a **neural network** to recognize handwritten digits usi
     ```sh
     python app.py
 
-Project Structure
-
-DigitRecognition/
-│── model/                # Your trained model files (if any)
-│── static/               # Static files (like images, CSS, etc.)
-│── templates/            # HTML templates (if using Flask)
-│── app.py                # Main Python file to run the project
-│── requirements.txt       # Dependencies file
-│── README.md             # Project documentation
-│── .gitignore            # Ignore unnecessary files (like venv)
+## 📁 Project Structure
+    ```php
+    DigitRecognition/
+    │── model/                # Your trained model files (if any)
+    │── static/               # Static files (like images, CSS, etc.)
+    │── templates/            # HTML templates (if using Flask)
+    │── app.py                # Main Python file to run the project
+    │── requirements.txt       # Dependencies file
+    │── README.md             # Project documentation
+    │── .gitignore            # Ignore unnecessary files (like venv)
 
