@@ -22,7 +22,7 @@ This project implements a **neural network** to recognize handwritten digits usi
     python app.py
 
 ## 📁 Project Structure
-    ```php
+    
     DigitRecognition/
     │── model/                # Your trained model files (if any)
     │── static/               # Static files (like images, CSS, etc.)
